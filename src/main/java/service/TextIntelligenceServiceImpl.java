@@ -8,12 +8,7 @@ import opennlp.tools.tokenize.WhitespaceTokenizer;
 import opennlp.tools.util.ObjectStream;
 import opennlp.tools.util.PlainTextByLineStream;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 
 import java.util.*;
 
@@ -29,7 +24,7 @@ public class TextIntelligenceServiceImpl implements TextIntelligenceService {
     public TextIntelligenceServiceImpl() {
         InputStream is = null;
         try {
-            is = new FileInputStream("resources/en_pos_maxent.bin");
+            is = this.getClass().getClassLoader().getResourceAsStream("en_pos_maxent.bin");
             this.model = new POSModel(is);
         } catch (Exception e) {
             e.printStackTrace();
@@ -62,7 +57,7 @@ public class TextIntelligenceServiceImpl implements TextIntelligenceService {
             String textString = posTags.toString();
            for(String companyKey: companyList){
                if(textString.toLowerCase().indexOf(companyKey.toLowerCase()) != -1){
-
+                   textString = textString.replaceAll("[^A-Za-z0-9_]", " ");
                    String[] words = textString.split("\\s+");
 
                    for (int i = 0; i < words.length; i++) {
@@ -96,7 +91,7 @@ public class TextIntelligenceServiceImpl implements TextIntelligenceService {
                     }
                 });
 
-        String[] wordOrder = new String[wordList.size()];
+        String[] wordOrder = new String[size];
         int i = 0;
         for (Map.Entry<String, Integer> wordEntry : wordList) {
             wordOrder[i] = wordEntry.getKey();
@@ -113,9 +108,8 @@ public class TextIntelligenceServiceImpl implements TextIntelligenceService {
 
     public List<String> getStopWordList() throws IOException {
         List<String> stopWordList = new ArrayList<String>();
-        BufferedReader br = new BufferedReader(new FileReader(
-                "resources/EnStopWordFile.txt"));
-
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream("EnStopWordFile.txt");
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
         String[] stopWords = br.readLine().split(",");
         for (String s : stopWords) {
             stopWordList.add(s);
@@ -126,9 +120,8 @@ public class TextIntelligenceServiceImpl implements TextIntelligenceService {
 
     public List<String> getIncludeWordList() throws IOException {
         List<String> includeWordList = new ArrayList<String>();
-        BufferedReader br = new BufferedReader(new FileReader(
-                "resources/EnIncludeWordFile.txt"));
-
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream("EnIncludeWordFile.txt");
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
         String[] stopWords = br.readLine().split(",");
         for (String s : stopWords) {
             includeWordList.add(s);
@@ -139,8 +132,8 @@ public class TextIntelligenceServiceImpl implements TextIntelligenceService {
 
     public List<String> getInterestCompanyList() throws IOException {
         List<String> includeWordList = new ArrayList<String>();
-        BufferedReader br = new BufferedReader(new FileReader(
-                "resources/InterestCompanyList.txt"));
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream("InterestCompanyList.txt");
+        BufferedReader br = new BufferedReader(new InputStreamReader(in));
 
         String[] stopWords = br.readLine().split(",");
         for (String s : stopWords) {
@@ -166,22 +159,19 @@ public class TextIntelligenceServiceImpl implements TextIntelligenceService {
                     .tokenize(inputText);
             tags = tagger.tag(whitespaceTokenizerLine);
             POSSample posTags = new POSSample(whitespaceTokenizerLine, tags);
-
-            String[] words = posTags.toString().split("\\s+");
+            String textString = posTags.toString().replaceAll("[^A-Za-z0-9_]", " ");
+            String[] words = textString.split("\\s+");
             for (int i = 0; i < words.length; i++) {
                 String[] splitWord = words[i].split("_");
-                // only select noun and verb
-                if (!this.getStopWordList().contains(splitWord[0])) {
+                List<String> stopWord = this.getStopWordList();
+                if (!stopWord.contains(splitWord[0])) {
 
-                    // only return noun
-                    if (splitWord[1].startsWith("N")) {
                         if (usefulWords.get(splitWord[0]) == null) {
                             usefulWords.put(splitWord[0], 1);
                         } else {
                             usefulWords.put(splitWord[0],
                                     usefulWords.get(splitWord[0]) + 1);
                         }
-                    }
                 }
             }
             perfMon.incrementCounter();
