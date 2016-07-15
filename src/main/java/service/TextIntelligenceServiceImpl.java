@@ -26,7 +26,7 @@ public class TextIntelligenceServiceImpl implements TextIntelligenceService {
     private String topKeywordsForAllDoc = " ";
 
 
-    public TextIntelligenceServiceImpl(String allURL, String userInput) {
+    public TextIntelligenceServiceImpl() {
         InputStream is = null;
         try {
             is = new FileInputStream("resources/en_pos_maxent.bin");
@@ -37,7 +37,7 @@ public class TextIntelligenceServiceImpl implements TextIntelligenceService {
 
     }
 
-    public Map<String, List<String>> getNegativeScore(String target, String inputText) throws IOException {
+    public Map<String, List<String>> getNegativeScore(String inputText) throws IOException {
         int score = 0;
 
         PerformanceMonitor perfMon = new PerformanceMonitor(System.err, "sent");
@@ -192,6 +192,3 @@ public class TextIntelligenceServiceImpl implements TextIntelligenceService {
 
 
 }
-
-
-
